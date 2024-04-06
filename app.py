@@ -28,11 +28,11 @@ def predict_branch():
         predicted_label = model.predict(new_data)[0]
 
         # Map the numeric label to its corresponding string representation
-        mapping = {0: 'DCA', 1: 'DCM', 2: 'MTA', 3: 'ITD', 4: 'IMI'}
+        mapping = {0: 'นิเทศศสาตร์ดิจิทัล', 1: 'ดิจิทัลคอนเทนต์และสื่อ', 2: 'อินเทอร์แอคทีฟ มัลติมีเดีย แอนิเมชันและเกม', 3: 'เทคโนโลยีสารสนเทศและนวัติกรรมดิจิทัล', 4: 'นวัตกรรมสารสนเทศทางการเเพทย์'}
         predicted_branch = mapping[predicted_label]
 
         # Set the prediction result to be displayed on the website
-        prediction_result = f"The predicted BRANCH is: {predicted_branch}"
+        prediction_result = f"หลักสูตร {predicted_branch}"
 
     return render_template('index.html', prediction_result=prediction_result)
 
