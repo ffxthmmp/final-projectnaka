@@ -62,9 +62,53 @@ def predict_branch():
         # สมมติว่า R_ID ไม่ได้รับมาจากฟอร์ม แต่จะดึงจากฐานข้อมูลโดยอิงจาก P_ID
         FEE_NAME = 2
         S_PARENT = int(request.form.get('S_PARENT', ))
-        GPA = int(request.form.get('GPA', ))  # ใช้ 0 เป็นค่า default หากไม่มีข้อมูล
-        GPA_MATCH = int(request.form.get('GPA_MATCH'))
-        GPA_SCI = int(request.form.get('GPA_SCI'))
+        GPA = float(request.form.get('GPA', 1))
+        if GPA >= 1.00 and GPA < 1.50:
+            GPA = 1
+        elif GPA >= 1.50 and GPA < 2.00:
+            GPA = 1.5
+        elif GPA >= 2.00 and GPA < 2.50:
+            GPA = 2
+        elif GPA >= 2.50 and GPA < 3.00:
+            GPA = 2.5
+        elif GPA >= 3.00 and GPA < 3.50:
+            GPA = 3
+        elif GPA >= 3.50 and GPA < 4.00:
+            GPA = 3.5
+        elif GPA == 4:
+            GPA = 4
+
+        GPA_MATCH = float(request.form.get('GPA_MATCH', 1))
+        if GPA_MATCH >= 1.00 and GPA_MATCH < 1.50:
+            GPA_MATCH = 1
+        elif GPA_MATCH >= 1.50 and GPA_MATCH < 2.00:
+            GPA_MATCH = 1.5
+        elif GPA_MATCH >= 2.00 and GPA_MATCH < 2.50:
+            GPA_MATCH = 2
+        elif GPA_MATCH >= 2.50 and GPA_MATCH < 3.00:
+            GPA_MATCH = 2.5
+        elif GPA_MATCH >= 3.00 and GPA_MATCH < 3.50:
+            GPA_MATCH = 3
+        elif GPA_MATCH >= 3.50 and GPA_MATCH < 4.00:
+            GPA_MATCH = 3.5
+        elif GPA_MATCH == 4:
+            GPA_MATCH = 4
+        
+        GPA_SCI = float(request.form.get('GPA_SCI', 1))
+        if GPA_SCI >= 1.00 and GPA_SCI < 1.50:
+            GPA_SCI = 1
+        elif GPA_SCI >= 1.50 and GPA_SCI < 2.00:
+            GPA_SCI = 1.5
+        elif GPA_SCI >= 2.00 and GPA_SCI < 2.50:
+            GPA_SCI = 2
+        elif GPA_SCI >= 2.50 and GPA_SCI < 3.00:
+            GPA_SCI = 2.5
+        elif GPA_SCI >= 3.00 and GPA_SCI < 3.50:
+            GPA_SCI = 3
+        elif GPA_SCI >= 3.50 and GPA_SCI < 4.00:
+            GPA_SCI = 3.5
+        elif GPA_SCI == 4:
+            GPA_SCI = 4
 
     # ตรวจสอบและดึง R_ID จากฐานข้อมูลโดยอิงจาก P_ID
         cursor = conn.cursor()
