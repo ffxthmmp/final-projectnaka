@@ -135,9 +135,10 @@
         alt="Informatic School of WU Logo"
       />
     </div>
+    <p>กรุณากรอกข้อมูลเพื่อทำการทำนายหลักสูตรที่มีความเหมาะสมกับคุณ</p>
     <div class="column">
     <form method="post" action="/">
-      <label for="S_RANK">โรงเรียนที่สำเร็จการศึกษา:</label>
+      <label for="S_RANK">โรงเรียนที่สำเร็จการศึกษา</label>
       <input
         type="text"
         id="S_RANK"
@@ -194,7 +195,7 @@
         });
       </script>
       <div class="column">
-      <label for="P_ID">จังหวัด:</label>
+      <label for="P_ID">จังหวัด</label>
       <input
         type="text"
         id="P_ID"
