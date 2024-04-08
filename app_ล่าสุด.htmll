@@ -1,0 +1,112 @@
+from flask import Flask, render_template, request
+from mysql.connector import Error
+import joblib
+import mysql.connector
+import random
+
+app = Flask(__name__)
+
+# Load the trained machine learning model
+model = joblib.load('CES_RANDOM_FOREST_MODEL.pkl')
+
+# connect to MySQL server
+try:
+    conn = mysql.connector.connect(
+        host="127.0.0.2",
+        port=3306,
+        user="root",
+        password="1q2w3e4r",
+        database="ces_database"
+    )
+    if conn.is_connected():
+        print('Connected to MySQL database')
+except Error as e:
+    print(f"Error: {e}")
+
+@app.route('/', methods=['GET', 'POST'])
+def predict_branch():
+    prediction_result = None
+    provinces = []
+    schools = []  # Add this line to initialize schools list
+    sorted_results = []  # ตัวแปรสำหรับเก็บข้อมูลจากฐานข้อมูล
+
+    # ดึงข้อมูลจากฐานข้อมูล
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT provinceId, provinceName, regionId FROM province")
+        province_rows = cursor.fetchall()  # เก็บผลลัพธ์ที่ได้ในตัวแปร
+        for row in province_rows:
+            provinces.append({"provinceId": row[0], "provinceName": row[1], "regionId": row[2]})
+        cursor.close()
+    except Error as e:
+        print(f"Error reading data from MySQL table {e}")
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, schoolrank, schoolname FROM schooltype")
+        school_rows = cursor.fetchall()
+        for row in school_rows:
+            schools.append({"id": row[0], "schoolrank": row[1], "schoolname": row[2]})
+        cursor.close()
+    except Error as e:
+        print(f"Error reading data from schooltype table {e}")
+    
+
+    if request.method == 'POST':
+        # สมมติว่า S_RANK, FEE_NAME, S_PARENT, GPA_MATCH มีการกรอกข้อมูลเสมอ
+        # S_RANK = int(request.form.get('S_RANK'),0)
+        # P_ID = int(request.form.get('P_ID'))
+        P_ID = int(request.form.get('selectedProvinceId'))
+        S_RANK = int(request.form.get('selectedSchoolId'))
+        
+        # สมมติว่า R_ID ไม่ได้รับมาจากฟอร์ม แต่จะดึงจากฐานข้อมูลโดยอิงจาก P_ID
+        FEE_NAME = 2
+        S_PARENT = int(request.form.get('S_PARENT', ))
+        GPA = int(request.form.get('GPA', ))  # ใช้ 0 เป็นค่า default หากไม่มีข้อมูล
+        GPA_MATCH = int(request.form.get('GPA_MATCH'))
+        GPA_SCI = int(request.form.get('GPA_SCI'))
+
+    # ตรวจสอบและดึง R_ID จากฐานข้อมูลโดยอิงจาก P_ID
+        cursor = conn.cursor()
+        cursor.execute("SELECT regionId FROM province WHERE provinceId = %s", (P_ID,))
+        row = cursor.fetchone()
+        R_ID = row[0] if row else 0  
+        # Prepare the input data for prediction
+        new_data = [[S_RANK, P_ID, R_ID, FEE_NAME, S_PARENT, GPA, GPA_MATCH, GPA_SCI]]
+
+        # Perform prediction
+        predicted_label = model.predict(new_data)[0]
+
+        # Map the numeric label to its corresponding string representation
+        mapping = {0: 'หลักสูตรนิเทศศาสตร์ดิจิทัล', 
+                   1: 'หลักสูตรดิจิทัลคอนเทนต์และสื่อ', 
+                   2: 'หลักสูตรอินเทอร์แอคทีฟ มัลติมีเดีย แอนิเมชันและเกม', 
+                   3: 'หลักสูตรเทคโนโลยีสารสนเทศและนวัตกรรมดิจิทัล', 
+                   4: 'หลักสูตรนวัตกรรมสารสนเทศทางการเเพทย์'}
+        predicted_branch = mapping[predicted_label]
+        
+        
+        # Calculate the percentage for each branch
+        probabilities = model.predict_proba(new_data)[0]
+        percentage_results = {mapping[i]: f'{prob:.1%}' for i, prob in enumerate(probabilities)}
+
+        # เรียงลำดับ percentage_results จากน้อยไปมากตามค่าเปอร์เซ็นต์
+        sorted_results = sorted(percentage_results.items(), key=lambda x: float(x[1].strip('%')), reverse=True)
+
+        # Set the prediction result to be displayed on the website
+        prediction_result = ""
+
+# Loop through each branch and its percentage
+    for i, (branch, percentage) in enumerate(sorted_results):
+        if i == 0:  # If it's the first element, it has the highest percentage
+            prediction_result += f"{branch}: {percentage}"
+        else:
+            prediction_result += f"{branch}: {percentage}"
+    # Loop through each branch and its percentage and construct prediction_result with HTML line breaks
+    prediction_result = "<br>".join(f"{branch}: {percentage}" for branch, percentage in sorted_results)
+    
+    # Render the webpage with the prediction results and province information
+    return render_template('index.html', prediction_result=prediction_result, provinces=provinces, schools=schools)
+
+if __name__ == '__main__':
+    app.run(debug=True)
